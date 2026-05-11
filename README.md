@@ -78,7 +78,13 @@ Si el dataset ya esta preparado:
 python scripts/train_all_models.py --skip-prepare
 ```
 
-Los scripts con dependencias opcionales registran un JSON explicativo si no pueden ejecutarse. Esto permite que el pipeline completo no se rompa por falta de PyTorch, XGBoost, Prophet, Chronos o pytorch-forecasting.
+Los scripts con dependencias opcionales registran un JSON explicativo si no pueden ejecutarse. Esto permite que el pipeline completo no se rompa por falta de dependencias avanzadas.
+
+En este MVP, Chronos-Bolt, ConvLSTM y TFT se ejecutan con versiones adaptadas al dataset disponible:
+
+- Chronos-Bolt usa un baseline temporal local de persistencia por parcela cuando no esta instalada la libreria fundacional.
+- ConvLSTM transforma cada vector de caracteristicas en una pequena rejilla pseudo-espacial, porque el CSV no contiene imagenes reales.
+- TFT usa una version ligera en PyTorch con seleccion/gating de variables y atencion temporal, evitando la dependencia pesada `pytorch-forecasting`.
 
 ## Resultados
 
@@ -127,16 +133,17 @@ Stop-Process -Id NUMERO_DEL_PID
 - Random Forest: baseline tabular fuerte con scikit-learn.
 - XGBoost: baseline tabular opcional si esta instalado.
 - LSTM, GRU, CNN-LSTM y TCN: modelos PyTorch de secuencias por parcela si PyTorch esta instalado.
-- ConvLSTM: registrado como no aplicable con el dataset actual, porque no hay tensores espaciales ni imagenes completas.
-- Chronos-Bolt y TFT: preparados como extensiones opcionales.
-- Prophet: preparado como extension opcional.
+- ConvLSTM: aproximacion tabular que reordena features en una rejilla pseudo-espacial.
+- Chronos-Bolt: baseline temporal local de persistencia, reemplazable por Chronos real cuando este disponible.
+- TFT: aproximacion ligera en PyTorch con gating de variables y atencion temporal.
+- Prophet: baseline interpretable sobre la serie agregada semanal media.
 - SARIMAX: baseline estadistico sobre la serie agregada media.
 
 ## Limitaciones
 
 - `stress_index` es una etiqueta derivada, no una medicion agronomica directa.
 - Las fechas de Sentinel no son perfectamente regulares.
-- El dataset actual no contiene imagenes completas; CNN-LSTM es una aproximacion tabular y ConvLSTM queda preparado para futuras imagenes o tensores espaciales.
+- El dataset actual no contiene imagenes completas; CNN-LSTM y ConvLSTM son aproximaciones tabulares. Si se incorporan tiles o tensores espaciales reales, ConvLSTM deberia adaptarse a esa entrada.
 - La prediccion a 7 dias depende de como se construye `target_stress_7d`.
 - Si no hay variables meteorologicas explicitas en el CSV, los modelos trabajan con las variables disponibles.
 - El sistema no debe considerarse operativo en campo sin validacion agronomica adicional.

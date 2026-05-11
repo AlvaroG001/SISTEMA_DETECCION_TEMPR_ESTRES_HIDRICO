@@ -1,12 +1,12 @@
 model_name,mae,rmse,r2,status,notes
-chronos_bolt,,,,not_run_dependency_missing,"Install a Chronos-compatible package, for example: pip install chronos-forecasting"
-cnn_lstm,,,,not_run_dependency_missing,Install PyTorch with: pip install torch
-convlstm,,,,not_applicable_with_current_dataset,ConvLSTM needs spatial tensors or image sequences. The current CSV is tabular by parcel/date.
-gru,,,,not_run_dependency_missing,Install PyTorch with: pip install torch
-lstm,,,,not_run_dependency_missing,Install PyTorch with: pip install torch
-prophet,,,,not_run_dependency_missing,Install Prophet with: pip install prophet. The script can then be extended to fit weekly parcel series.
-random_forest,0.05786345287355311,0.08208656560129028,0.829943224106654,ok,
-sarimax,0.13860985713086998,0.17386042536992535,-0.3783024959909216,ok,"SARIMAX baseline fitted on the aggregate mean stress series, not parcel-level series."
-tcn,,,,not_run_dependency_missing,Install PyTorch with: pip install torch
-tft,,,,not_run_dependency_missing,Install optional dependencies with: pip install pytorch-forecasting torch
-xgboost,,,,not_run_dependency_missing,Install xgboost with: pip install xgboost
+chronos_bolt,0.09917204100391112,0.14402969579187405,0.4764551927514947,ok,Executable local fallback for Chronos-Bolt: per-parcel persistence forecast using the latest observed stress_index. Replace with the real Chronos package when the dependency and model weights are available.
+cnn_lstm,0.0707385858349151,0.09513923669091018,0.7715616076911381,ok,Tabular CNN-LSTM approximation: 1D convolution over feature sequences followed by LSTM.
+convlstm,0.09853615517289097,0.12683112376360148,0.5940229808112402,ok,Simplified ConvLSTM: feature vectors are reshaped into pseudo-spatial grids because the current dataset has no image tensors.
+gru,0.07836640453603509,0.10178176304188444,0.7385493605684703,ok,PyTorch sequence model using 8 previous observations per parcel.
+lstm,0.06864801739384657,0.09091034390031716,0.7914182192526724,ok,PyTorch sequence model using 8 previous observations per parcel.
+prophet,0.1553443186258146,0.18383067886690793,-0.5652349828068619,ok,"Prophet fitted on weekly aggregate mean target_stress_7d, not parcel-level series."
+random_forest,0.05787212309050212,0.08194212069723149,0.8305411836492781,ok,
+sarimax,0.13860987413675563,0.17386044795622294,-0.37830285410292186,ok,"SARIMAX baseline fitted on the aggregate mean stress series, not parcel-level series."
+tcn,0.09981927262914947,0.12048225547736024,0.6336502092514209,ok,PyTorch TCN-style sequence model using dilated temporal convolutions.
+tft,0.0810527817763491,0.10023870528219021,0.7464166898208102,ok,Lightweight TFT-inspired PyTorch model with feature gating and temporal self-attention; it avoids the heavy pytorch-forecasting dependency.
+xgboost,0.06144907988665544,0.08409220165923353,0.8215316469777475,ok,

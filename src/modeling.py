@@ -9,7 +9,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-from src.config import MODELS_DIR, RANDOM_STATE, TARGET
+from src.config import HORIZON_DAYS, MODELS_DIR, RANDOM_STATE, TARGET
 from src.data_loading import get_feature_columns, load_modeling_dataset
 from src.evaluation import save_model_outputs, save_not_run_metrics
 
@@ -127,6 +127,9 @@ def train_torch_sequence_model(model_name: str, architecture: str) -> dict:
     import torch.nn as nn
     from torch.utils.data import DataLoader, TensorDataset
 
+    torch.manual_seed(RANDOM_STATE)
+    np.random.seed(RANDOM_STATE)
+
     df, features, _train, _val, _test = get_train_val_test()
     train_df = df[df["split"] == "train"].copy()
     scaler = StandardScaler()
@@ -165,6 +168,34 @@ def train_torch_sequence_model(model_name: str, architecture: str) -> dict:
                 self.conv = nn.Sequential(nn.Conv1d(n_features, 48, kernel_size=3, padding=1), nn.ReLU())
                 self.recurrent = nn.LSTM(48, hidden, batch_first=True)
                 self.head = nn.Linear(hidden, 1)
+            elif arch == "convlstm":
+                self.grid_size = int(np.ceil(np.sqrt(n_features)))
+                self.padded_features = self.grid_size * self.grid_size
+                self.hidden_channels = 16
+                self.gates = nn.Conv2d(
+                    1 + self.hidden_channels,
+                    4 * self.hidden_channels,
+                    kernel_size=3,
+                    padding=1,
+                )
+                self.head = nn.Linear(self.hidden_channels, 1)
+            elif arch == "tft":
+                n_heads = 4
+                self.feature_gate = nn.Sequential(
+                    nn.Linear(n_features, n_features),
+                    nn.Sigmoid(),
+                )
+                self.projection = nn.Linear(n_features, hidden)
+                encoder_layer = nn.TransformerEncoderLayer(
+                    d_model=hidden,
+                    nhead=n_heads,
+                    dim_feedforward=hidden * 2,
+                    dropout=0.10,
+                    batch_first=True,
+                )
+                self.encoder = nn.TransformerEncoder(encoder_layer, num_layers=2)
+                self.context_gate = nn.Sequential(nn.Linear(hidden, hidden), nn.Sigmoid())
+                self.head = nn.Linear(hidden, 1)
             else:
                 raise ValueError(f"Unknown architecture: {arch}")
 
@@ -176,6 +207,31 @@ def train_torch_sequence_model(model_name: str, architecture: str) -> dict:
                 conv = self.conv(batch.transpose(1, 2)).transpose(1, 2)
                 out, _ = self.recurrent(conv)
                 return self.head(out[:, -1, :]).squeeze(-1)
+            if self.arch == "convlstm":
+                batch_size, seq_len, n_features = batch.shape
+                pad = self.padded_features - n_features
+                if pad:
+                    batch = nn.functional.pad(batch, (0, pad))
+                frames = batch.view(batch_size, seq_len, 1, self.grid_size, self.grid_size)
+                h = frames.new_zeros(batch_size, self.hidden_channels, self.grid_size, self.grid_size)
+                c = frames.new_zeros(batch_size, self.hidden_channels, self.grid_size, self.grid_size)
+                for step in range(seq_len):
+                    gates = self.gates(torch.cat([frames[:, step], h], dim=1))
+                    i, f, o, g = torch.chunk(gates, 4, dim=1)
+                    i = torch.sigmoid(i)
+                    f = torch.sigmoid(f)
+                    o = torch.sigmoid(o)
+                    g = torch.tanh(g)
+                    c = f * c + i * g
+                    h = o * torch.tanh(c)
+                pooled = h.mean(dim=(2, 3))
+                return self.head(pooled).squeeze(-1)
+            if self.arch == "tft":
+                gated = batch * self.feature_gate(batch)
+                encoded = self.encoder(self.projection(gated))
+                context = encoded[:, -1, :]
+                context = context * self.context_gate(context)
+                return self.head(context).squeeze(-1)
             out = self.net(batch.transpose(1, 2)).squeeze(-1)
             return self.head(out).squeeze(-1)
 
@@ -210,6 +266,14 @@ def train_torch_sequence_model(model_name: str, architecture: str) -> dict:
         MODELS_DIR / f"{model_name}.pt",
     )
     joblib.dump({"imputer": imputer, "scaler": scaler}, MODELS_DIR / f"{model_name}_preprocess.joblib")
+    notes_by_arch = {
+        "lstm": "PyTorch sequence model using 8 previous observations per parcel.",
+        "gru": "PyTorch sequence model using 8 previous observations per parcel.",
+        "cnn_lstm": "Tabular CNN-LSTM approximation: 1D convolution over feature sequences followed by LSTM.",
+        "tcn": "PyTorch TCN-style sequence model using dilated temporal convolutions.",
+        "convlstm": "Simplified ConvLSTM: feature vectors are reshaped into pseudo-spatial grids because the current dataset has no image tensors.",
+        "tft": "Lightweight TFT-inspired PyTorch model with feature gating and temporal self-attention; it avoids the heavy pytorch-forecasting dependency.",
+    }
     return save_model_outputs(
         model_name,
         seq_rows[train_mask],
@@ -218,15 +282,52 @@ def train_torch_sequence_model(model_name: str, architecture: str) -> dict:
         predict(val_mask),
         predict(test_mask),
         features,
-        notes="PyTorch sequence model using 8 previous observations per parcel.",
+        notes=notes_by_arch.get(architecture, "PyTorch sequence model."),
     )
 
 
-def train_convlstm_placeholder() -> dict:
-    return save_not_run_metrics(
-        "convlstm",
-        "not_applicable_with_current_dataset",
-        "ConvLSTM needs spatial tensors or image sequences. The current CSV is tabular by parcel/date.",
+def train_convlstm() -> dict:
+    return train_torch_sequence_model("convlstm", "convlstm")
+
+
+def train_tft_light() -> dict:
+    return train_torch_sequence_model("tft", "tft")
+
+
+def train_chronos_bolt_baseline() -> dict:
+    df, _features, train, val, test = get_train_val_test()
+    model_name = "chronos_bolt"
+
+    def persistence_predict(frame: pd.DataFrame) -> np.ndarray:
+        fallback = train["stress_index"].median()
+        if "stress_lag_1" in frame.columns:
+            return frame["stress_lag_1"].fillna(fallback).clip(0, 1).to_numpy(dtype=float)
+        return np.full(len(frame), fallback, dtype=float)
+
+    artifact = {
+        "model_name": model_name,
+        "strategy": "local_univariate_persistence_fallback",
+        "description": (
+            "Uses the last available parcel stress value as a Chronos-Bolt-compatible "
+            "local baseline when the external foundation-model dependency is not installed."
+        ),
+        "target": TARGET,
+        "horizon_days": HORIZON_DAYS,
+    }
+    joblib.dump(artifact, MODELS_DIR / f"{model_name}.joblib")
+    return save_model_outputs(
+        model_name,
+        train,
+        val,
+        test,
+        persistence_predict(val),
+        persistence_predict(test),
+        ["stress_lag_1"],
+        notes=(
+            "Executable local fallback for Chronos-Bolt: per-parcel persistence forecast "
+            "using the latest observed stress_index. Replace with the real Chronos package "
+            "when the dependency and model weights are available."
+        ),
     )
 
 

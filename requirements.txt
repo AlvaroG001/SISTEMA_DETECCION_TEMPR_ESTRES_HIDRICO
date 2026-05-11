@@ -15,7 +15,6 @@ torch
 statsmodels
 prophet
 
-# Optional advanced dependencies. Install only if you want to run these models.
-# pytorch-forecasting
-# chronos-forecasting
-# autogluon.timeseries
+pytorch-forecasting
+chronos-forecasting
+autogluon.timeseries

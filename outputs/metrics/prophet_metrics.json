@@ -1,14 +1,18 @@
 {
   "model_name": "prophet",
-  "status": "not_run_dependency_missing",
-  "notes": "Install Prophet with: pip install prophet. The script can then be extended to fit weekly parcel series.",
-  "mae": null,
-  "rmse": null,
-  "r2": null,
-  "n_train": 0,
-  "n_val": 0,
-  "n_test": 0,
-  "features_used": [],
+  "status": "ok",
+  "notes": "Prophet fitted on weekly aggregate mean target_stress_7d, not parcel-level series.",
+  "mae": 0.1553443186258146,
+  "rmse": 0.18383067886690793,
+  "r2": -0.5652349828068619,
+  "n_train": 163,
+  "n_val": 31,
+  "n_test": 31,
+  "features_used": [
+    "weekly_aggregate_target_history"
+  ],
   "target": "target_stress_7d",
-  "horizon_days": 7
+  "horizon_days": 7,
+  "predictions_file": "C:\\Users\\agortiz\\OneDrive - Indra\\Escritorio\\SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO\\outputs\\predictions\\prophet_predictions.csv",
+  "plot_file": "C:\\Users\\agortiz\\OneDrive - Indra\\Escritorio\\SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO\\outputs\\plots\\prophet_real_vs_pred.png"
 }

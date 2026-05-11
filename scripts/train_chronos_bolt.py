@@ -4,9 +4,9 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.config import ensure_directories
-from src.modeling import train_chronos_placeholder
+from src.modeling import train_chronos_bolt_baseline
 
 
 if __name__ == "__main__":
     ensure_directories()
-    print(train_chronos_placeholder())
+    print(train_chronos_bolt_baseline())
