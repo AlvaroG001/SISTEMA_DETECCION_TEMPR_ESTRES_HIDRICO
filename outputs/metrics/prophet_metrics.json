@@ -1,0 +1,14 @@
+{
+  "model_name": "prophet",
+  "status": "not_run_dependency_missing",
+  "notes": "Install Prophet with: pip install prophet. The script can then be extended to fit weekly parcel series.",
+  "mae": null,
+  "rmse": null,
+  "r2": null,
+  "n_train": 0,
+  "n_val": 0,
+  "n_test": 0,
+  "features_used": [],
+  "target": "target_stress_7d",
+  "horizon_days": 7
+}

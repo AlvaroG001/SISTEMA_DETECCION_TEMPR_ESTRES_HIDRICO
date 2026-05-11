@@ -1,0 +1,12 @@
+model_name,mae,rmse,r2,status,notes
+chronos_bolt,,,,not_run_dependency_missing,"Install a Chronos-compatible package, for example: pip install chronos-forecasting"
+cnn_lstm,,,,not_run_dependency_missing,Install PyTorch with: pip install torch
+convlstm,,,,not_applicable_with_current_dataset,ConvLSTM needs spatial tensors or image sequences. The current CSV is tabular by parcel/date.
+gru,,,,not_run_dependency_missing,Install PyTorch with: pip install torch
+lstm,,,,not_run_dependency_missing,Install PyTorch with: pip install torch
+prophet,,,,not_run_dependency_missing,Install Prophet with: pip install prophet. The script can then be extended to fit weekly parcel series.
+random_forest,0.05786345287355311,0.08208656560129028,0.829943224106654,ok,
+sarimax,0.13860985713086998,0.17386042536992535,-0.3783024959909216,ok,"SARIMAX baseline fitted on the aggregate mean stress series, not parcel-level series."
+tcn,,,,not_run_dependency_missing,Install PyTorch with: pip install torch
+tft,,,,not_run_dependency_missing,Install optional dependencies with: pip install pytorch-forecasting torch
+xgboost,,,,not_run_dependency_missing,Install xgboost with: pip install xgboost

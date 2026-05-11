@@ -1,0 +1,21 @@
+pandas
+numpy
+scikit-learn
+xgboost
+matplotlib
+plotly
+streamlit
+streamlit-folium
+folium
+geopandas
+shapely
+openpyxl
+joblib
+torch
+statsmodels
+prophet
+
+# Optional advanced dependencies. Install only if you want to run these models.
+# pytorch-forecasting
+# chronos-forecasting
+# autogluon.timeseries

@@ -1,0 +1,14 @@
+{
+  "model_name": "tcn",
+  "status": "not_run_dependency_missing",
+  "notes": "Install PyTorch with: pip install torch",
+  "mae": null,
+  "rmse": null,
+  "r2": null,
+  "n_train": 0,
+  "n_val": 0,
+  "n_test": 0,
+  "features_used": [],
+  "target": "target_stress_7d",
+  "horizon_days": 7
+}
