@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from src.config import HORIZON_DAYS, TARGET, TARGET_DATE, TARGET_TOLERANCE_DAYS
+from src.config import DEFAULT_HORIZON_DAYS, TARGET_DATE, TARGET_TOLERANCE_DAYS, target_column
 
 
 def _safe_divide(num: pd.Series, den: pd.Series) -> pd.Series:
@@ -14,7 +14,7 @@ def add_spectral_indices(df: pd.DataFrame) -> pd.DataFrame:
     required = ["B8A", "B4", "B12"]
     missing = [col for col in required if col not in df.columns]
     if missing:
-        raise ValueError(f"Missing columns for spectral indices: {missing}")
+        raise ValueError(f"Faltan columnas para calcular índices espectrales: {missing}")
     nir = pd.to_numeric(df["B8A"], errors="coerce")
     red = pd.to_numeric(df["B4"], errors="coerce")
     swir = pd.to_numeric(df["B12"], errors="coerce")
@@ -60,10 +60,10 @@ def add_group_features(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def add_target_7d(df: pd.DataFrame) -> pd.DataFrame:
+def add_target(df: pd.DataFrame, horizon_days: int = DEFAULT_HORIZON_DAYS) -> pd.DataFrame:
     frames = []
     tolerance = pd.Timedelta(days=TARGET_TOLERANCE_DAYS)
-    horizon = pd.Timedelta(days=HORIZON_DAYS)
+    target_col = target_column(horizon_days)
 
     for _, group in df.groupby("nombre_parcela", sort=False):
         g = group.sort_values("fecha").copy()
@@ -74,7 +74,7 @@ def add_target_7d(df: pd.DataFrame) -> pd.DataFrame:
         target_deltas = np.full(len(g), np.nan)
 
         for i, current in enumerate(dates):
-            desired = current + np.timedelta64(HORIZON_DAYS, "D")
+            desired = current + np.timedelta64(int(horizon_days), "D")
             start = np.searchsorted(dates, current + np.timedelta64(1, "D"), side="left")
             if start >= len(dates):
                 continue
@@ -86,7 +86,7 @@ def add_target_7d(df: pd.DataFrame) -> pd.DataFrame:
                 target_dates[i] = dates[best_pos]
                 target_deltas[i] = float((dates[best_pos] - current) / np.timedelta64(1, "D"))
 
-        g[TARGET] = target_values
+        g[target_col] = target_values
         g[TARGET_DATE] = pd.to_datetime(target_dates)
         g["target_delta_days"] = target_deltas
         frames.append(g)
@@ -94,7 +94,8 @@ def add_target_7d(df: pd.DataFrame) -> pd.DataFrame:
     return pd.concat(frames, ignore_index=True)
 
 
-def build_modeling_dataset(raw_df: pd.DataFrame) -> pd.DataFrame:
+def build_modeling_dataset(raw_df: pd.DataFrame, horizon_days: int = DEFAULT_HORIZON_DAYS) -> pd.DataFrame:
+    target_col = target_column(horizon_days)
     df = raw_df.copy()
     df["nombre_parcela"] = df["nombre_parcela"].fillna(df["parcela_id"].astype(str))
     numeric_cols = [col for col in df.columns if col not in ["nombre_parcela", "fecha"]]
@@ -104,12 +105,12 @@ def build_modeling_dataset(raw_df: pd.DataFrame) -> pd.DataFrame:
     df = add_spectral_indices(df)
     df = add_temporal_features(df)
     df = add_group_features(df)
-    df = add_target_7d(df)
-    df = df.dropna(subset=[TARGET, TARGET_DATE])
+    df = add_target(df, horizon_days=horizon_days)
+    df = df.dropna(subset=[target_col, TARGET_DATE])
     feature_cols = [
         col
         for col in df.select_dtypes(include=["number", "bool"]).columns
-        if col not in [TARGET, "target_delta_days"]
+        if col not in [target_col, "target_delta_days"]
     ]
     df[feature_cols] = df[feature_cols].replace([np.inf, -np.inf], np.nan)
     df[feature_cols] = df.groupby("nombre_parcela")[feature_cols].transform(lambda x: x.ffill().bfill())

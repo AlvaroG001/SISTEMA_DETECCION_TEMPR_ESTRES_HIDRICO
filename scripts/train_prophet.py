@@ -1,4 +1,5 @@
 from pathlib import Path
+import argparse
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -7,16 +8,16 @@ import joblib
 import numpy as np
 import pandas as pd
 
-from src.config import MODELS_DIR, TARGET, ensure_directories
+from src.config import DEFAULT_HORIZON_DAYS, MODELS_DIR, ensure_directories, output_stem, target_column
 from src.data_loading import load_modeling_dataset
 from src.evaluation import save_model_outputs, save_not_run_metrics
 from src.modeling import dependency_available
 
 
-def build_weekly_aggregate(df: pd.DataFrame) -> pd.DataFrame:
+def build_weekly_aggregate(df: pd.DataFrame, target_col: str) -> pd.DataFrame:
     daily = (
         df.groupby(["fecha", "split"], as_index=False)
-        .agg(y=(TARGET, "mean"))
+        .agg(y=(target_col, "mean"))
         .sort_values("fecha")
     )
     frames = []
@@ -34,14 +35,14 @@ def build_weekly_aggregate(df: pd.DataFrame) -> pd.DataFrame:
     return pd.concat(frames, ignore_index=True).sort_values("ds")
 
 
-def make_output_frame(part: pd.DataFrame, split: str) -> pd.DataFrame:
+def make_output_frame(part: pd.DataFrame, split: str, target_col: str, horizon_days: int) -> pd.DataFrame:
     return pd.DataFrame(
         {
             "parcela_id": "aggregate",
             "nombre_parcela": "aggregate",
             "fecha": part["ds"].values,
-            "target_date": (part["ds"] + pd.Timedelta(days=7)).values,
-            TARGET: part["y"].values,
+            "target_date": (part["ds"] + pd.Timedelta(days=horizon_days)).values,
+            target_col: part["y"].values,
             "split": split,
         }
     )
@@ -67,6 +68,11 @@ def predict_prophet(model, part: pd.DataFrame) -> np.ndarray:
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--horizon-days", type=int, default=DEFAULT_HORIZON_DAYS)
+    args = parser.parse_args()
+    target_col = target_column(args.horizon_days)
+
     ensure_directories()
     if not dependency_available("prophet"):
         print(
@@ -74,12 +80,14 @@ def main():
                 "prophet",
                 "not_run_dependency_missing",
                 "Install Prophet with: pip install prophet",
+                target_col=target_col,
+                horizon_days=args.horizon_days,
             )
         )
         return
 
-    df = load_modeling_dataset()
-    weekly = build_weekly_aggregate(df)
+    df = load_modeling_dataset(horizon_days=args.horizon_days)
+    weekly = build_weekly_aggregate(df, target_col=target_col)
     train = weekly[weekly["split"] == "train"].copy()
     val = weekly[weekly["split"] == "val"].copy()
     test = weekly[weekly["split"] == "test"].copy()
@@ -89,6 +97,8 @@ def main():
                 "prophet",
                 "not_run_insufficient_data",
                 "Weekly aggregate split has no rows for train, validation, or test.",
+                target_col=target_col,
+                horizon_days=args.horizon_days,
             )
         )
         return
@@ -98,14 +108,22 @@ def main():
         val_pred = predict_prophet(model, val)
         refit = fit_prophet(pd.concat([train, val], ignore_index=True).sort_values("ds"))
         test_pred = predict_prophet(refit, test)
-        joblib.dump(refit, MODELS_DIR / "prophet.joblib")
+        joblib.dump(refit, MODELS_DIR / f"{output_stem('prophet', args.horizon_days)}.joblib")
     except Exception as exc:
-        print(save_not_run_metrics("prophet", "not_run_error", f"Prophet failed: {exc}"))
+        print(
+            save_not_run_metrics(
+                "prophet",
+                "not_run_error",
+                f"Prophet failed: {exc}",
+                target_col=target_col,
+                horizon_days=args.horizon_days,
+            )
+        )
         return
 
-    train_df = make_output_frame(train, "train")
-    val_df = make_output_frame(val, "val")
-    test_df = make_output_frame(test, "test")
+    train_df = make_output_frame(train, "train", target_col, args.horizon_days)
+    val_df = make_output_frame(val, "val", target_col, args.horizon_days)
+    test_df = make_output_frame(test, "test", target_col, args.horizon_days)
     print(
         save_model_outputs(
             "prophet",
@@ -115,7 +133,9 @@ def main():
             val_pred,
             test_pred,
             ["weekly_aggregate_target_history"],
-            notes="Prophet fitted on weekly aggregate mean target_stress_7d, not parcel-level series.",
+            target_col=target_col,
+            horizon_days=args.horizon_days,
+            notes=f"Prophet fitted on weekly aggregate mean {target_col}, not parcel-level series.",
         )
     )
 

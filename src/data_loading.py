@@ -4,7 +4,7 @@ from typing import Iterable
 
 import pandas as pd
 
-from src.config import PROCESSED_DATA_FILE, RAW_DATA_FILE, TARGET, TARGET_DATE
+from src.config import DEFAULT_HORIZON_DAYS, PROCESSED_DATA_FILE, RAW_DATA_FILE, TARGET, TARGET_DATE, processed_data_file
 
 
 def add_project_root_to_path(script_file: str) -> None:
@@ -15,19 +15,23 @@ def add_project_root_to_path(script_file: str) -> None:
 
 def read_raw_dataset(path: Path = RAW_DATA_FILE) -> pd.DataFrame:
     if not path.exists():
-        raise FileNotFoundError(f"Missing raw dataset: {path}")
+        raise FileNotFoundError(f"No se encontró el dataset bruto: {path}")
     df = pd.read_csv(path)
     if "fecha" not in df.columns:
-        raise ValueError("The raw CSV must contain a 'fecha' column.")
+        raise ValueError("El CSV bruto debe contener una columna 'fecha'.")
     df["fecha"] = pd.to_datetime(df["fecha"], errors="coerce")
     df = df.dropna(subset=["fecha"])
     return df
 
 
-def load_modeling_dataset(path: Path = PROCESSED_DATA_FILE) -> pd.DataFrame:
+def load_modeling_dataset(path: Path | None = None, horizon_days: int = DEFAULT_HORIZON_DAYS) -> pd.DataFrame:
+    if path is None:
+        path = processed_data_file(horizon_days)
+        if not path.exists() and int(horizon_days) == DEFAULT_HORIZON_DAYS:
+            path = PROCESSED_DATA_FILE
     if not path.exists():
         raise FileNotFoundError(
-            f"Missing processed dataset: {path}. Run python scripts/prepare_dataset.py first."
+            f"No se encontró el dataset procesado: {path}. Ejecuta primero python scripts/prepare_dataset.py --horizon-days {horizon_days}."
         )
     df = pd.read_csv(path)
     for col in ["fecha", TARGET_DATE]:
@@ -36,9 +40,13 @@ def load_modeling_dataset(path: Path = PROCESSED_DATA_FILE) -> pd.DataFrame:
     return df
 
 
-def get_feature_columns(df: pd.DataFrame, extra_exclude: Iterable[str] = ()) -> list[str]:
+def get_feature_columns(
+    df: pd.DataFrame,
+    target_col: str = TARGET,
+    extra_exclude: Iterable[str] = (),
+) -> list[str]:
     exclude = {
-        TARGET,
+        target_col,
         TARGET_DATE,
         "target_delta_days",
         "stress_index",
@@ -48,4 +56,8 @@ def get_feature_columns(df: pd.DataFrame, extra_exclude: Iterable[str] = ()) -> 
     }
     exclude.update(extra_exclude)
     numeric = df.select_dtypes(include=["number", "bool"]).columns.tolist()
-    return [col for col in numeric if col not in exclude and df[col].notna().any()]
+    return [
+        col
+        for col in numeric
+        if col not in exclude and not col.startswith("target_stress_") and df[col].notna().any()
+    ]

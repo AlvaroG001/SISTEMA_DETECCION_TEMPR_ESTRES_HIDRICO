@@ -1,4 +1,5 @@
 from pathlib import Path
+import argparse
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -8,5 +9,8 @@ from src.modeling import train_torch_sequence_model
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--horizon-days", type=int, default=7)
+    args = parser.parse_args()
     ensure_directories()
-    print(train_torch_sequence_model("lstm", "lstm"))
+    print(train_torch_sequence_model("lstm", "lstm", horizon_days=args.horizon_days))

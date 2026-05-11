@@ -9,7 +9,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-from src.config import HORIZON_DAYS, MODELS_DIR, RANDOM_STATE, TARGET
+from src.config import DEFAULT_HORIZON_DAYS, MODELS_DIR, RANDOM_STATE, output_stem, target_column
 from src.data_loading import get_feature_columns, load_modeling_dataset
 from src.evaluation import save_model_outputs, save_not_run_metrics
 
@@ -18,17 +18,18 @@ def dependency_available(module_name: str) -> bool:
     return importlib.util.find_spec(module_name) is not None
 
 
-def get_train_val_test():
-    df = load_modeling_dataset()
-    features = get_feature_columns(df)
+def get_train_val_test(horizon_days: int = DEFAULT_HORIZON_DAYS):
+    target_col = target_column(horizon_days)
+    df = load_modeling_dataset(horizon_days=horizon_days)
+    features = get_feature_columns(df, target_col=target_col)
     train = df[df["split"] == "train"].copy()
     val = df[df["split"] == "val"].copy()
     test = df[df["split"] == "test"].copy()
-    return df, features, train, val, test
+    return df, features, train, val, test, target_col
 
 
-def train_random_forest() -> dict:
-    _df, features, train, val, test = get_train_val_test()
+def train_random_forest(horizon_days: int = DEFAULT_HORIZON_DAYS) -> dict:
+    _df, features, train, val, test, target_col = get_train_val_test(horizon_days)
     model_name = "random_forest"
     model = Pipeline(
         steps=[
@@ -44,8 +45,8 @@ def train_random_forest() -> dict:
             ),
         ]
     )
-    model.fit(train[features], train[TARGET])
-    joblib.dump(model, MODELS_DIR / f"{model_name}.joblib")
+    model.fit(train[features], train[target_col])
+    joblib.dump(model, MODELS_DIR / f"{output_stem(model_name, horizon_days)}.joblib")
     return save_model_outputs(
         model_name,
         train,
@@ -54,20 +55,25 @@ def train_random_forest() -> dict:
         model.predict(val[features]),
         model.predict(test[features]),
         features,
+        target_col=target_col,
+        horizon_days=horizon_days,
     )
 
 
-def train_xgboost() -> dict:
+def train_xgboost(horizon_days: int = DEFAULT_HORIZON_DAYS) -> dict:
     model_name = "xgboost"
+    target_col = target_column(horizon_days)
     if not dependency_available("xgboost"):
         return save_not_run_metrics(
             model_name,
             "not_run_dependency_missing",
             "Install xgboost with: pip install xgboost",
+            target_col=target_col,
+            horizon_days=horizon_days,
         )
     from xgboost import XGBRegressor
 
-    _df, features, train, val, test = get_train_val_test()
+    _df, features, train, val, test, target_col = get_train_val_test(horizon_days)
     model = Pipeline(
         steps=[
             ("imputer", SimpleImputer(strategy="median")),
@@ -86,8 +92,8 @@ def train_xgboost() -> dict:
             ),
         ]
     )
-    model.fit(train[features], train[TARGET])
-    joblib.dump(model, MODELS_DIR / f"{model_name}.joblib")
+    model.fit(train[features], train[target_col])
+    joblib.dump(model, MODELS_DIR / f"{output_stem(model_name, horizon_days)}.joblib")
     return save_model_outputs(
         model_name,
         train,
@@ -96,16 +102,18 @@ def train_xgboost() -> dict:
         model.predict(val[features]),
         model.predict(test[features]),
         features,
+        target_col=target_col,
+        horizon_days=horizon_days,
     )
 
 
-def build_sequences(df: pd.DataFrame, features: list[str], sequence_length: int = 8):
+def build_sequences(df: pd.DataFrame, features: list[str], target_col: str, sequence_length: int = 8):
     rows = []
     seqs = []
     ys = []
     for _, group in df.sort_values(["nombre_parcela", "fecha"]).groupby("nombre_parcela", sort=False):
         values = group[features].to_numpy(dtype=np.float32)
-        target = group[TARGET].to_numpy(dtype=np.float32)
+        target = group[target_col].to_numpy(dtype=np.float32)
         for i in range(sequence_length - 1, len(group)):
             seqs.append(values[i - sequence_length + 1 : i + 1])
             ys.append(target[i])
@@ -115,12 +123,19 @@ def build_sequences(df: pd.DataFrame, features: list[str], sequence_length: int 
     return np.stack(seqs), np.asarray(ys), pd.DataFrame(rows)
 
 
-def train_torch_sequence_model(model_name: str, architecture: str) -> dict:
+def train_torch_sequence_model(
+    model_name: str,
+    architecture: str,
+    horizon_days: int = DEFAULT_HORIZON_DAYS,
+) -> dict:
+    target_col = target_column(horizon_days)
     if not dependency_available("torch"):
         return save_not_run_metrics(
             model_name,
             "not_run_dependency_missing",
             "Install PyTorch with: pip install torch",
+            target_col=target_col,
+            horizon_days=horizon_days,
         )
 
     import torch
@@ -130,16 +145,22 @@ def train_torch_sequence_model(model_name: str, architecture: str) -> dict:
     torch.manual_seed(RANDOM_STATE)
     np.random.seed(RANDOM_STATE)
 
-    df, features, _train, _val, _test = get_train_val_test()
+    df, features, _train, _val, _test, target_col = get_train_val_test(horizon_days)
     train_df = df[df["split"] == "train"].copy()
     scaler = StandardScaler()
     imputer = SimpleImputer(strategy="median")
     train_df[features] = scaler.fit_transform(imputer.fit_transform(train_df[features]))
     df[features] = scaler.transform(imputer.transform(df[features]))
 
-    x, y, seq_rows = build_sequences(df, features, sequence_length=8)
+    x, y, seq_rows = build_sequences(df, features, target_col=target_col, sequence_length=8)
     if len(seq_rows) < 10:
-        return save_not_run_metrics(model_name, "not_run_insufficient_data", "Not enough sequences.")
+        return save_not_run_metrics(
+            model_name,
+            "not_run_insufficient_data",
+            "Not enough sequences.",
+            target_col=target_col,
+            horizon_days=horizon_days,
+        )
     train_mask = seq_rows["split"].eq("train").to_numpy()
     val_mask = seq_rows["split"].eq("val").to_numpy()
     test_mask = seq_rows["split"].eq("test").to_numpy()
@@ -263,9 +284,12 @@ def train_torch_sequence_model(model_name: str, architecture: str) -> dict:
             "architecture": architecture,
             "sequence_length": 8,
         },
-        MODELS_DIR / f"{model_name}.pt",
+        MODELS_DIR / f"{output_stem(model_name, horizon_days)}.pt",
     )
-    joblib.dump({"imputer": imputer, "scaler": scaler}, MODELS_DIR / f"{model_name}_preprocess.joblib")
+    joblib.dump(
+        {"imputer": imputer, "scaler": scaler},
+        MODELS_DIR / f"{output_stem(model_name, horizon_days)}_preprocess.joblib",
+    )
     notes_by_arch = {
         "lstm": "PyTorch sequence model using 8 previous observations per parcel.",
         "gru": "PyTorch sequence model using 8 previous observations per parcel.",
@@ -282,20 +306,22 @@ def train_torch_sequence_model(model_name: str, architecture: str) -> dict:
         predict(val_mask),
         predict(test_mask),
         features,
+        target_col=target_col,
+        horizon_days=horizon_days,
         notes=notes_by_arch.get(architecture, "PyTorch sequence model."),
     )
 
 
-def train_convlstm() -> dict:
-    return train_torch_sequence_model("convlstm", "convlstm")
+def train_convlstm(horizon_days: int = DEFAULT_HORIZON_DAYS) -> dict:
+    return train_torch_sequence_model("convlstm", "convlstm", horizon_days=horizon_days)
 
 
-def train_tft_light() -> dict:
-    return train_torch_sequence_model("tft", "tft")
+def train_tft_light(horizon_days: int = DEFAULT_HORIZON_DAYS) -> dict:
+    return train_torch_sequence_model("tft", "tft", horizon_days=horizon_days)
 
 
-def train_chronos_bolt_baseline() -> dict:
-    df, _features, train, val, test = get_train_val_test()
+def train_chronos_bolt_baseline(horizon_days: int = DEFAULT_HORIZON_DAYS) -> dict:
+    df, _features, train, val, test, target_col = get_train_val_test(horizon_days)
     model_name = "chronos_bolt"
 
     def persistence_predict(frame: pd.DataFrame) -> np.ndarray:
@@ -311,10 +337,10 @@ def train_chronos_bolt_baseline() -> dict:
             "Uses the last available parcel stress value as a Chronos-Bolt-compatible "
             "local baseline when the external foundation-model dependency is not installed."
         ),
-        "target": TARGET,
-        "horizon_days": HORIZON_DAYS,
+        "target": target_col,
+        "horizon_days": int(horizon_days),
     }
-    joblib.dump(artifact, MODELS_DIR / f"{model_name}.joblib")
+    joblib.dump(artifact, MODELS_DIR / f"{output_stem(model_name, horizon_days)}.joblib")
     return save_model_outputs(
         model_name,
         train,
@@ -323,6 +349,8 @@ def train_chronos_bolt_baseline() -> dict:
         persistence_predict(val),
         persistence_predict(test),
         ["stress_lag_1"],
+        target_col=target_col,
+        horizon_days=horizon_days,
         notes=(
             "Executable local fallback for Chronos-Bolt: per-parcel persistence forecast "
             "using the latest observed stress_index. Replace with the real Chronos package "
@@ -331,29 +359,39 @@ def train_chronos_bolt_baseline() -> dict:
     )
 
 
-def train_chronos_placeholder() -> dict:
+def train_chronos_placeholder(horizon_days: int = DEFAULT_HORIZON_DAYS) -> dict:
+    target_col = target_column(horizon_days)
     if not dependency_available("chronos"):
         return save_not_run_metrics(
             "chronos_bolt",
             "not_run_dependency_missing",
             "Install a Chronos-compatible package, for example: pip install chronos-forecasting",
+            target_col=target_col,
+            horizon_days=horizon_days,
         )
     return save_not_run_metrics(
         "chronos_bolt",
         "not_implemented_optional",
         "Chronos dependency was detected, but this MVP keeps the model as an optional extension.",
+        target_col=target_col,
+        horizon_days=horizon_days,
     )
 
 
-def train_tft_placeholder() -> dict:
+def train_tft_placeholder(horizon_days: int = DEFAULT_HORIZON_DAYS) -> dict:
+    target_col = target_column(horizon_days)
     if not dependency_available("pytorch_forecasting"):
         return save_not_run_metrics(
             "tft",
             "not_run_dependency_missing",
             "Install optional dependencies with: pip install pytorch-forecasting torch",
+            target_col=target_col,
+            horizon_days=horizon_days,
         )
     return save_not_run_metrics(
         "tft",
         "not_implemented_optional",
         "pytorch-forecasting was detected, but this MVP keeps TFT as an optional extension.",
+        target_col=target_col,
+        horizon_days=horizon_days,
     )

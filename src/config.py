@@ -19,9 +19,10 @@ PROCESSED_DATA_FILE = PROCESSED_DIR / "dataset_modeling.csv"
 PARCELS_GEOJSON_FILE = PROCESSED_DIR / "parcels.geojson"
 GEOJSON_WARNING_FILE = PROCESSED_DIR / "parcels_geojson_warning.txt"
 
+DEFAULT_HORIZON_DAYS = 7
 TARGET = "target_stress_7d"
 TARGET_DATE = "target_date"
-HORIZON_DAYS = 7
+HORIZON_DAYS = DEFAULT_HORIZON_DAYS
 TARGET_TOLERANCE_DAYS = 14
 RANDOM_STATE = 42
 
@@ -50,3 +51,15 @@ def ensure_directories() -> None:
         PLOTS_DIR,
     ]:
         path.mkdir(parents=True, exist_ok=True)
+
+
+def target_column(horizon_days: int = DEFAULT_HORIZON_DAYS) -> str:
+    return f"target_stress_{int(horizon_days)}d"
+
+
+def processed_data_file(horizon_days: int = DEFAULT_HORIZON_DAYS) -> Path:
+    return PROCESSED_DIR / f"dataset_modeling_h{int(horizon_days)}.csv"
+
+
+def output_stem(model_name: str, horizon_days: int = DEFAULT_HORIZON_DAYS) -> str:
+    return f"{model_name}_h{int(horizon_days)}"

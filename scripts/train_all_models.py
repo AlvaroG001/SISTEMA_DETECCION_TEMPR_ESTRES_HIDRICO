@@ -16,24 +16,38 @@ def main() -> int:
         action="store_true",
         help="Do not run scripts/prepare_dataset.py before training.",
     )
+    parser.add_argument(
+        "--horizons",
+        type=int,
+        nargs="+",
+        default=[7],
+        help="Prediction horizons in days to prepare/train. Example: --horizons 5 7",
+    )
     args = parser.parse_args()
     ensure_directories()
     root = Path(__file__).resolve().parents[1]
     scripts_dir = root / "scripts"
     failures = []
-    if not args.skip_prepare:
-        print("\n=== Running prepare_dataset.py ===")
-        result = subprocess.run([sys.executable, "-u", str(scripts_dir / "prepare_dataset.py")], cwd=root)
-        if result.returncode != 0:
-            print("prepare_dataset.py failed; stopping before model training.")
-            return result.returncode
-    for script_name in MODEL_SCRIPTS:
-        script_path = scripts_dir / script_name
-        print(f"\n=== Running {script_name} ===")
-        result = subprocess.run([sys.executable, "-u", str(script_path)], cwd=root)
-        if result.returncode != 0:
-            failures.append((script_name, result.returncode))
-            print(f"{script_name} failed with exit code {result.returncode}")
+    for horizon in args.horizons:
+        if not args.skip_prepare:
+            print(f"\n=== Running prepare_dataset.py --horizon-days {horizon} ===")
+            result = subprocess.run(
+                [sys.executable, "-u", str(scripts_dir / "prepare_dataset.py"), "--horizon-days", str(horizon)],
+                cwd=root,
+            )
+            if result.returncode != 0:
+                print(f"prepare_dataset.py failed for horizon {horizon}; stopping before model training.")
+                return result.returncode
+        for script_name in MODEL_SCRIPTS:
+            script_path = scripts_dir / script_name
+            print(f"\n=== Running {script_name} --horizon-days {horizon} ===")
+            result = subprocess.run(
+                [sys.executable, "-u", str(script_path), "--horizon-days", str(horizon)],
+                cwd=root,
+            )
+            if result.returncode != 0:
+                failures.append((f"{script_name} h{horizon}", result.returncode))
+                print(f"{script_name} failed for horizon {horizon} with exit code {result.returncode}")
     comparison = update_model_comparison()
     print(f"\nModel comparison saved to {comparison}")
     if failures:

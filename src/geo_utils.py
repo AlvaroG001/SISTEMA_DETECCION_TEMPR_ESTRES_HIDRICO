@@ -30,7 +30,7 @@ def excel_to_geojson(
         name_col = next((c for c in df.columns if str(c).strip().lower() in {"nombre", "parcela", "nombre_parcela"}), None)
         coord_col = next((c for c in df.columns if "coord" in str(c).strip().lower()), None)
         if coord_col is None:
-            raise ValueError("Could not find a coordinates column in the Excel file.")
+            raise ValueError("No se encontró una columna de coordenadas en el Excel.")
         features = []
         generated_counter = 1
         for idx, row in df.iterrows():
@@ -55,7 +55,7 @@ def excel_to_geojson(
                 }
             )
         if not features:
-            raise ValueError("No valid polygons were parsed from the Excel file.")
+            raise ValueError("No se pudo extraer ningún polígono válido del Excel.")
         geojson = {"type": "FeatureCollection", "features": features}
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with output_path.open("w", encoding="utf-8") as f:
@@ -66,8 +66,8 @@ def excel_to_geojson(
     except Exception as exc:
         warning_path.parent.mkdir(parents=True, exist_ok=True)
         warning_path.write_text(
-            "Could not generate parcels.geojson. The rest of the project can run.\n"
-            f"Reason: {exc}\n",
+            "No se pudo generar parcels.geojson. El resto del proyecto puede ejecutarse.\n"
+            f"Motivo: {exc}\n",
             encoding="utf-8",
         )
         return False

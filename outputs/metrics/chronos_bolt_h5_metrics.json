@@ -1,0 +1,18 @@
+{
+  "model_name": "chronos_bolt",
+  "status": "ok",
+  "notes": "Executable local fallback for Chronos-Bolt: per-parcel persistence forecast using the latest observed stress_index. Replace with the real Chronos package when the dependency and model weights are available.",
+  "mae": 0.09993137070643399,
+  "rmse": 0.14621741088074816,
+  "r2": 0.4578168037517052,
+  "n_train": 19722,
+  "n_val": 4218,
+  "n_test": 4332,
+  "features_used": [
+    "stress_lag_1"
+  ],
+  "target": "target_stress_5d",
+  "horizon_days": 5,
+  "predictions_file": "C:\\Users\\agortiz\\OneDrive - Indra\\Escritorio\\SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO\\outputs\\predictions\\chronos_bolt_h5_predictions.csv",
+  "plot_file": "C:\\Users\\agortiz\\OneDrive - Indra\\Escritorio\\SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO\\outputs\\plots\\chronos_bolt_h5_real_vs_pred.png"
+}

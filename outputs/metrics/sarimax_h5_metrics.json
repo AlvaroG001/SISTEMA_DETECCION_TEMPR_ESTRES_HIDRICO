@@ -1,0 +1,18 @@
+{
+  "model_name": "sarimax",
+  "status": "ok",
+  "notes": "SARIMAX baseline fitted on the aggregate mean stress series, not parcel-level series.",
+  "mae": 0.1387584231514422,
+  "rmse": 0.16920884642189518,
+  "r2": -0.3282693336244198,
+  "n_train": 173,
+  "n_val": 37,
+  "n_test": 38,
+  "features_used": [
+    "aggregate_target_history"
+  ],
+  "target": "target_stress_5d",
+  "horizon_days": 5,
+  "predictions_file": "C:\\Users\\agortiz\\OneDrive - Indra\\Escritorio\\SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO\\outputs\\predictions\\sarimax_h5_predictions.csv",
+  "plot_file": "C:\\Users\\agortiz\\OneDrive - Indra\\Escritorio\\SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO\\outputs\\plots\\sarimax_h5_real_vs_pred.png"
+}

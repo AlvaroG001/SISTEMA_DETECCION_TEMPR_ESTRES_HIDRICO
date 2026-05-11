@@ -1,0 +1,18 @@
+{
+  "model_name": "prophet",
+  "status": "ok",
+  "notes": "Prophet fitted on weekly aggregate mean target_stress_5d, not parcel-level series.",
+  "mae": 0.1824264685283267,
+  "rmse": 0.2095338336521165,
+  "r2": -1.1161487965286003,
+  "n_train": 149,
+  "n_val": 30,
+  "n_test": 29,
+  "features_used": [
+    "weekly_aggregate_target_history"
+  ],
+  "target": "target_stress_5d",
+  "horizon_days": 5,
+  "predictions_file": "C:\\Users\\agortiz\\OneDrive - Indra\\Escritorio\\SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO\\outputs\\predictions\\prophet_h5_predictions.csv",
+  "plot_file": "C:\\Users\\agortiz\\OneDrive - Indra\\Escritorio\\SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO\\outputs\\plots\\prophet_h5_real_vs_pred.png"
+}
