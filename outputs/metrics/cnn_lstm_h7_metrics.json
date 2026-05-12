@@ -2,9 +2,9 @@
   "model_name": "cnn_lstm",
   "status": "ok",
   "notes": "Tabular CNN-LSTM approximation: 1D convolution over feature sequences followed by LSTM.",
-  "mae": 0.0707385858349151,
-  "rmse": 0.09513923669091018,
-  "r2": 0.7715616076911381,
+  "mae": 0.07034636670863163,
+  "rmse": 0.09527579031243101,
+  "r2": 0.7709053805164509,
   "n_train": 20748,
   "n_val": 4560,
   "n_test": 4674,
@@ -59,6 +59,6 @@
   ],
   "target": "target_stress_7d",
   "horizon_days": 7,
-  "predictions_file": "C:\\Users\\agortiz\\OneDrive - Indra\\Escritorio\\SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO\\outputs\\predictions\\cnn_lstm_h7_predictions.csv",
-  "plot_file": "C:\\Users\\agortiz\\OneDrive - Indra\\Escritorio\\SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO\\outputs\\plots\\cnn_lstm_h7_real_vs_pred.png"
+  "predictions_file": "/Users/alvaro/Proyectos/SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO/outputs/predictions/cnn_lstm_h7_predictions.csv",
+  "plot_file": "/Users/alvaro/Proyectos/SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO/outputs/plots/cnn_lstm_h7_real_vs_pred.png"
 }

@@ -1,23 +1,23 @@
-model_name,horizon_days,mae,rmse,r2,status,notes
-chronos_bolt,5,0.09993137070643399,0.14621741088074816,0.4578168037517052,ok,Executable local fallback for Chronos-Bolt: per-parcel persistence forecast using the latest observed stress_index. Replace with the real Chronos package when the dependency and model weights are available.
-chronos_bolt,7,0.09917204100391112,0.14402969579187405,0.4764551927514947,ok,Executable local fallback for Chronos-Bolt: per-parcel persistence forecast using the latest observed stress_index. Replace with the real Chronos package when the dependency and model weights are available.
-cnn_lstm,5,0.07642467609985645,0.10067420186938565,0.7429697343284987,ok,Tabular CNN-LSTM approximation: 1D convolution over feature sequences followed by LSTM.
-cnn_lstm,7,0.0707385858349151,0.09513923669091018,0.7715616076911381,ok,Tabular CNN-LSTM approximation: 1D convolution over feature sequences followed by LSTM.
-convlstm,5,0.09517518664398819,0.12485694017872931,0.6046577315823318,ok,Simplified ConvLSTM: feature vectors are reshaped into pseudo-spatial grids because the current dataset has no image tensors.
-convlstm,7,0.09853615517289097,0.12683112376360148,0.5940229808112402,ok,Simplified ConvLSTM: feature vectors are reshaped into pseudo-spatial grids because the current dataset has no image tensors.
-gru,5,0.07789135247792318,0.10263733593122543,0.7328478852308002,ok,PyTorch sequence model using 8 previous observations per parcel.
-gru,7,0.07836640453603509,0.10178176304188444,0.7385493605684703,ok,PyTorch sequence model using 8 previous observations per parcel.
-lstm,5,0.08261637746670857,0.10536690065555135,0.7184495111674366,ok,PyTorch sequence model using 8 previous observations per parcel.
-lstm,7,0.06864801739384657,0.09091034390031716,0.7914182192526724,ok,PyTorch sequence model using 8 previous observations per parcel.
-prophet,5,0.1824264685283267,0.2095338336521165,-1.1161487965286003,ok,"Prophet fitted on weekly aggregate mean target_stress_5d, not parcel-level series."
-prophet,7,0.1553443186258146,0.18383067886690793,-0.5652349828068619,ok,"Prophet fitted on weekly aggregate mean target_stress_7d, not parcel-level series."
-random_forest,5,0.05175548365905478,0.07490491360965999,0.8577119297081474,ok,
-random_forest,7,0.05787212309050213,0.08194212069723149,0.8305411836492781,ok,
-sarimax,5,0.1387584231514422,0.16920884642189518,-0.3282693336244198,ok,"SARIMAX baseline fitted on the aggregate mean stress series, not parcel-level series."
-sarimax,7,0.13860987413675563,0.17386044795622294,-0.37830285410292186,ok,"SARIMAX baseline fitted on the aggregate mean stress series, not parcel-level series."
-tcn,5,0.10781928968970361,0.13013027034003197,0.5705579783861157,ok,PyTorch TCN-style sequence model using dilated temporal convolutions.
-tcn,7,0.09981927262914947,0.12048225547736024,0.6336502092514209,ok,PyTorch TCN-style sequence model using dilated temporal convolutions.
-tft,5,0.07925521198992284,0.10846200861130725,0.7016657188544138,ok,Lightweight TFT-inspired PyTorch model with feature gating and temporal self-attention; it avoids the heavy pytorch-forecasting dependency.
-tft,7,0.0810527817763491,0.10023870528219021,0.7464166898208102,ok,Lightweight TFT-inspired PyTorch model with feature gating and temporal self-attention; it avoids the heavy pytorch-forecasting dependency.
-xgboost,5,0.06266521427960602,0.0829711838820238,0.8254168004728489,ok,
-xgboost,7,0.06144907988665544,0.08409220165923353,0.8215316469777475,ok,
+model_name,horizon_days,mae,rmse,r2,precision_pct,status,notes
+chronos_bolt,5,0.09993137070643399,0.14621741088074816,0.4578168037517052,90.0068629293566,ok,Executable local fallback for Chronos-Bolt: per-parcel persistence forecast using the latest observed stress_index. Replace with the real Chronos package when the dependency and model weights are available.
+chronos_bolt,7,0.09917204100391112,0.14402969579187405,0.4764551927514947,90.0827958996089,ok,Executable local fallback for Chronos-Bolt: per-parcel persistence forecast using the latest observed stress_index. Replace with the real Chronos package when the dependency and model weights are available.
+cnn_lstm,5,0.07423632266163978,0.09728430383030132,0.7599877405145505,92.57636773383602,ok,Tabular CNN-LSTM approximation: 1D convolution over feature sequences followed by LSTM.
+cnn_lstm,7,0.07034636670863163,0.09527579031243101,0.7709053805164509,92.96536332913684,ok,Tabular CNN-LSTM approximation: 1D convolution over feature sequences followed by LSTM.
+convlstm,5,0.09517507183590727,0.12485680511071151,0.604658586930342,90.48249281640928,ok,Simplified ConvLSTM: feature vectors are reshaped into pseudo-spatial grids because the current dataset has no image tensors.
+convlstm,7,0.0985362077701005,0.12683120739468157,0.594022445417296,90.14637922298995,ok,Simplified ConvLSTM: feature vectors are reshaped into pseudo-spatial grids because the current dataset has no image tensors.
+gru,5,0.07789137653923957,0.10263736019847186,0.7328477589015867,92.21086234607604,ok,PyTorch sequence model using 8 previous observations per parcel.
+gru,7,0.07836643472889926,0.10178179713134117,0.7385491854347039,92.16335652711007,ok,PyTorch sequence model using 8 previous observations per parcel.
+lstm,5,0.08261638003795002,0.10536691149947125,0.7184494532154405,91.738361996205,ok,PyTorch sequence model using 8 previous observations per parcel.
+lstm,7,0.06864803110106578,0.09091035766967534,0.791418156068719,93.13519688989342,ok,PyTorch sequence model using 8 previous observations per parcel.
+prophet,5,0.18235736406182232,0.2094668268688883,-1.114795567327307,81.76426359381776,ok,"Prophet fitted on weekly aggregate mean target_stress_5d, not parcel-level series."
+prophet,7,0.15528830235644267,0.18377799821181293,-0.5643380075057256,84.47116976435574,ok,"Prophet fitted on weekly aggregate mean target_stress_7d, not parcel-level series."
+random_forest,5,0.05165398261783997,0.0747915598552359,0.8581422534949952,94.83460173821601,ok,
+random_forest,7,0.05821827580930361,0.08258651042447855,0.8278654685934974,94.17817241906964,ok,
+sarimax,5,0.13875842315225345,0.16920884642342635,-0.32826933364845856,86.12415768477466,ok,"SARIMAX baseline fitted on the aggregate mean stress series, not parcel-level series."
+sarimax,7,0.13860987413678236,0.17386044795625838,-0.3783028541034841,86.13901258632175,ok,"SARIMAX baseline fitted on the aggregate mean stress series, not parcel-level series."
+tcn,5,0.11125458788133394,0.13316846925765047,0.5502712105358926,88.87454121186661,ok,PyTorch TCN-style sequence model using dilated temporal convolutions.
+tcn,7,0.10182847661000557,0.12306117778837124,0.6177989250339257,89.81715233899943,ok,PyTorch TCN-style sequence model using dilated temporal convolutions.
+tft,5,0.07819974835358508,0.10631102411222146,0.7133813288245668,92.18002516464149,ok,Lightweight TFT-inspired PyTorch model with feature gating and temporal self-attention; it avoids the heavy pytorch-forecasting dependency.
+tft,7,0.08159013663178323,0.10092873688450724,0.7429133969548611,91.84098633682167,ok,Lightweight TFT-inspired PyTorch model with feature gating and temporal self-attention; it avoids the heavy pytorch-forecasting dependency.
+xgboost,5,0.061139427062274446,0.08224370434148962,0.8284648206619721,93.88605729377255,ok,
+xgboost,7,0.06222677834393272,0.08517277473951583,0.8169155915117337,93.77732216560672,ok,

@@ -2,9 +2,9 @@
   "model_name": "gru",
   "status": "ok",
   "notes": "PyTorch sequence model using 8 previous observations per parcel.",
-  "mae": 0.07789135247792318,
-  "rmse": 0.10263733593122543,
-  "r2": 0.7328478852308002,
+  "mae": 0.07789137653923957,
+  "rmse": 0.10263736019847186,
+  "r2": 0.7328477589015867,
   "n_train": 18924,
   "n_val": 4218,
   "n_test": 4332,
@@ -59,6 +59,6 @@
   ],
   "target": "target_stress_5d",
   "horizon_days": 5,
-  "predictions_file": "C:\\Users\\agortiz\\OneDrive - Indra\\Escritorio\\SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO\\outputs\\predictions\\gru_h5_predictions.csv",
-  "plot_file": "C:\\Users\\agortiz\\OneDrive - Indra\\Escritorio\\SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO\\outputs\\plots\\gru_h5_real_vs_pred.png"
+  "predictions_file": "/Users/alvaro/Proyectos/SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO/outputs/predictions/gru_h5_predictions.csv",
+  "plot_file": "/Users/alvaro/Proyectos/SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO/outputs/plots/gru_h5_real_vs_pred.png"
 }

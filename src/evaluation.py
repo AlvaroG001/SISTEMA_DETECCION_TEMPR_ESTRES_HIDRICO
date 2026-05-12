@@ -13,11 +13,19 @@ from src.config import DEFAULT_HORIZON_DAYS, METRICS_DIR, PLOTS_DIR, PREDICTIONS
 def regression_metrics(y_true, y_pred) -> dict[str, float]:
     y_true = np.asarray(y_true, dtype=float)
     y_pred = np.asarray(y_pred, dtype=float)
+    mae = float(mean_absolute_error(y_true, y_pred))
     return {
-        "mae": float(mean_absolute_error(y_true, y_pred)),
+        "mae": mae,
         "rmse": float(np.sqrt(mean_squared_error(y_true, y_pred))),
         "r2": float(r2_score(y_true, y_pred)) if len(y_true) > 1 else float("nan"),
+        "precision_pct": float(np.clip((1 - mae) * 100, 0, 100)),
     }
+
+
+def precision_from_mae(mae: float | None) -> float | None:
+    if mae is None or pd.isna(mae):
+        return None
+    return float(np.clip((1 - float(mae)) * 100, 0, 100))
 
 
 def build_prediction_frame(df: pd.DataFrame, y_pred, model_name: str, target_col: str = TARGET) -> pd.DataFrame:
@@ -124,6 +132,7 @@ def save_not_run_metrics(
         "mae": None,
         "rmse": None,
         "r2": None,
+        "precision_pct": None,
         "n_train": 0,
         "n_val": 0,
         "n_test": 0,
@@ -151,6 +160,7 @@ def update_model_comparison() -> Path:
                 "mae": data.get("mae"),
                 "rmse": data.get("rmse"),
                 "r2": data.get("r2"),
+                "precision_pct": data.get("precision_pct", precision_from_mae(data.get("mae"))),
                 "status": data.get("status", "ok"),
                 "notes": data.get("notes", ""),
             }

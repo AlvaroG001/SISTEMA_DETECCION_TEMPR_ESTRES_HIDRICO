@@ -4,9 +4,9 @@
     {
       "type": "Feature",
       "properties": {
-        "nombre_parcela": "parcela_excel_001",
+        "nombre_parcela": "E0",
         "excel_row": 2,
-        "generated_name": true
+        "generated_name": false
       },
       "geometry": {
         "type": "Polygon",
@@ -47,9 +47,9 @@
     {
       "type": "Feature",
       "properties": {
-        "nombre_parcela": "parcela_excel_002",
+        "nombre_parcela": "E1",
         "excel_row": 3,
-        "generated_name": true
+        "generated_name": false
       },
       "geometry": {
         "type": "Polygon",
@@ -90,9 +90,9 @@
     {
       "type": "Feature",
       "properties": {
-        "nombre_parcela": "parcela_excel_003",
+        "nombre_parcela": "E2",
         "excel_row": 4,
-        "generated_name": true
+        "generated_name": false
       },
       "geometry": {
         "type": "Polygon",
@@ -133,9 +133,9 @@
     {
       "type": "Feature",
       "properties": {
-        "nombre_parcela": "parcela_excel_004",
+        "nombre_parcela": "E3",
         "excel_row": 5,
-        "generated_name": true
+        "generated_name": false
       },
       "geometry": {
         "type": "Polygon",
@@ -176,9 +176,9 @@
     {
       "type": "Feature",
       "properties": {
-        "nombre_parcela": "parcela_excel_005",
+        "nombre_parcela": "E4",
         "excel_row": 6,
-        "generated_name": true
+        "generated_name": false
       },
       "geometry": {
         "type": "Polygon",
@@ -219,9 +219,9 @@
     {
       "type": "Feature",
       "properties": {
-        "nombre_parcela": "parcela_excel_006",
+        "nombre_parcela": "E5",
         "excel_row": 7,
-        "generated_name": true
+        "generated_name": false
       },
       "geometry": {
         "type": "Polygon",
@@ -266,9 +266,9 @@
     {
       "type": "Feature",
       "properties": {
-        "nombre_parcela": "parcela_excel_007",
+        "nombre_parcela": "E6",
         "excel_row": 8,
-        "generated_name": true
+        "generated_name": false
       },
       "geometry": {
         "type": "Polygon",
@@ -333,9 +333,9 @@
     {
       "type": "Feature",
       "properties": {
-        "nombre_parcela": "parcela_excel_008",
+        "nombre_parcela": "E7",
         "excel_row": 9,
-        "generated_name": true
+        "generated_name": false
       },
       "geometry": {
         "type": "Polygon",
@@ -376,9 +376,9 @@
     {
       "type": "Feature",
       "properties": {
-        "nombre_parcela": "parcela_excel_009",
+        "nombre_parcela": "E8",
         "excel_row": 10,
-        "generated_name": true
+        "generated_name": false
       },
       "geometry": {
         "type": "Polygon",
@@ -419,9 +419,9 @@
     {
       "type": "Feature",
       "properties": {
-        "nombre_parcela": "parcela_excel_010",
+        "nombre_parcela": "E9",
         "excel_row": 11,
-        "generated_name": true
+        "generated_name": false
       },
       "geometry": {
         "type": "Polygon",
@@ -462,9 +462,9 @@
     {
       "type": "Feature",
       "properties": {
-        "nombre_parcela": "parcela_excel_011",
+        "nombre_parcela": "E10",
         "excel_row": 12,
-        "generated_name": true
+        "generated_name": false
       },
       "geometry": {
         "type": "Polygon",
@@ -505,9 +505,9 @@
     {
       "type": "Feature",
       "properties": {
-        "nombre_parcela": "parcela_excel_012",
+        "nombre_parcela": "E11",
         "excel_row": 13,
-        "generated_name": true
+        "generated_name": false
       },
       "geometry": {
         "type": "Polygon",
@@ -548,9 +548,9 @@
     {
       "type": "Feature",
       "properties": {
-        "nombre_parcela": "parcela_excel_013",
+        "nombre_parcela": "E12",
         "excel_row": 14,
-        "generated_name": true
+        "generated_name": false
       },
       "geometry": {
         "type": "Polygon",
@@ -591,9 +591,9 @@
     {
       "type": "Feature",
       "properties": {
-        "nombre_parcela": "parcela_excel_014",
+        "nombre_parcela": "E13",
         "excel_row": 15,
-        "generated_name": true
+        "generated_name": false
       },
       "geometry": {
         "type": "Polygon",
@@ -634,9 +634,9 @@
     {
       "type": "Feature",
       "properties": {
-        "nombre_parcela": "parcela_excel_015",
+        "nombre_parcela": "E14",
         "excel_row": 16,
-        "generated_name": true
+        "generated_name": false
       },
       "geometry": {
         "type": "Polygon",
@@ -733,9 +733,9 @@
     {
       "type": "Feature",
       "properties": {
-        "nombre_parcela": "parcela_excel_016",
+        "nombre_parcela": "E15",
         "excel_row": 17,
-        "generated_name": true
+        "generated_name": false
       },
       "geometry": {
         "type": "Polygon",
@@ -796,9 +796,9 @@
     {
       "type": "Feature",
       "properties": {
-        "nombre_parcela": "parcela_excel_017",
+        "nombre_parcela": "E16",
         "excel_row": 18,
-        "generated_name": true
+        "generated_name": false
       },
       "geometry": {
         "type": "Polygon",
@@ -847,9 +847,9 @@
     {
       "type": "Feature",
       "properties": {
-        "nombre_parcela": "parcela_excel_018",
+        "nombre_parcela": "E17",
         "excel_row": 19,
-        "generated_name": true
+        "generated_name": false
       },
       "geometry": {
         "type": "Polygon",

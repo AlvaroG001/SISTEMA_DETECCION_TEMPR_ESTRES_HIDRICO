@@ -16,21 +16,6 @@ DATASET_H7_PATH = ROOT / "data" / "processed" / "dataset_modeling_h7.csv"
 DATASET_PATH = ROOT / "data" / "processed" / "dataset_modeling.csv"
 CLIMATE_PATH = ROOT / "data" / "raw" / "climate_forecast.csv"
 
-MODEL_EXPLANATIONS = {
-    "random_forest": "Baseline tabular robusto. Suele funcionar muy bien porque aprovecha directamente lags, medias móviles e índices espectrales.",
-    "xgboost": "Baseline tabular no lineal. Suele competir con Random Forest capturando interacciones entre bandas, fechas e índices.",
-    "lstm": "Modelo secuencial recurrente. Usa ventanas temporales por parcela, pero puede rendir peor si las features tabulares ya resumen bien el histórico.",
-    "gru": "Alternativa recurrente más ligera que LSTM. Captura dependencias temporales con menos parámetros.",
-    "cnn_lstm": "Aproximación tabular CNN-LSTM: convolución 1D sobre secuencias de features y después LSTM.",
-    "convlstm": "Aproximación tabular ConvLSTM: reordena las features en una rejilla pseudo-espacial porque no hay imágenes reales.",
-    "chronos_bolt": "Fallback temporal local tipo persistencia. Usa el último estrés observado por parcela como referencia ejecutable.",
-    "tft": "Aproximación ligera tipo TFT con selección de variables y atención temporal en PyTorch.",
-    "tcn": "Red convolucional temporal con convoluciones dilatadas sobre la secuencia de observaciones.",
-    "prophet": "Baseline interpretable sobre la serie agregada semanal. Pierde detalle por parcela, por eso suele rendir peor.",
-    "sarimax": "Baseline estadístico clásico sobre serie agregada. Útil como referencia interpretable.",
-}
-
-
 st.set_page_config(page_title="Estrés hídrico por parcela", layout="wide")
 st.title("Predicción de estrés hídrico por parcela")
 
@@ -80,7 +65,10 @@ def load_metrics(model_name: str, horizon_days: int):
     path = METRICS_DIR / f"{model_name}_h{horizon_days}_metrics.json"
     if not path.exists():
         return {}
-    return json.loads(path.read_text(encoding="utf-8"))
+    metrics = json.loads(path.read_text(encoding="utf-8"))
+    if metrics.get("precision_pct") is None:
+        metrics["precision_pct"] = precision_from_mae(metrics.get("mae"))
+    return metrics
 
 
 @st.cache_data
@@ -88,7 +76,29 @@ def load_comparison():
     path = METRICS_DIR / "model_comparison.csv"
     if not path.exists():
         return pd.DataFrame()
-    return pd.read_csv(path)
+    comparison = pd.read_csv(path)
+    if "precision_pct" not in comparison.columns:
+        comparison["precision_pct"] = comparison["mae"].apply(precision_from_mae)
+    else:
+        comparison["precision_pct"] = comparison.apply(
+            lambda row: precision_from_mae(row.get("mae"))
+            if pd.isna(row.get("precision_pct"))
+            else row.get("precision_pct"),
+            axis=1,
+        )
+    return comparison
+
+
+def precision_from_mae(mae):
+    if mae is None or pd.isna(mae):
+        return None
+    return max(0.0, min(100.0, (1 - float(mae)) * 100))
+
+
+def format_percent(value):
+    if value is None or pd.isna(value):
+        return "NA"
+    return f"{float(value):.2f}%"
 
 
 def climate_file_mtime() -> float:
@@ -253,10 +263,11 @@ def best_model_summary(comparison: pd.DataFrame) -> None:
         most_common = "no disponible"
 
     st.subheader("Mejores modelos")
-    cols = st.columns(3)
+    cols = st.columns(4)
     cols[0].metric("Mejor global", f"{best_overall['model_name']} ({int(best_overall['horizon_days'])} días)")
     cols[1].metric("MAE", f"{best_overall['mae']:.4f}")
     cols[2].metric("RMSE", f"{best_overall['rmse']:.4f}")
+    cols[3].metric("Precisión", format_percent(best_overall.get("precision_pct")))
 
     st.markdown(
         "El mejor modelo se decide principalmente por **menor MAE** y, como desempate práctico, por **menor RMSE**. "
@@ -268,8 +279,8 @@ def best_model_summary(comparison: pd.DataFrame) -> None:
             f"Comparando los mismos modelos entre horizontes, el horizonte que aparece más veces como mejor es **{most_common}**. "
             "Esto es esperable cuando el horizonte más corto conserva mejor la relación con las observaciones recientes."
         )
-    best_display = best_by_horizon[["horizon_days", "model_name", "mae", "rmse", "r2"]].copy()
-    best_display["por_que"] = best_display["model_name"].map(MODEL_EXPLANATIONS).fillna("")
+    best_display = best_by_horizon[["horizon_days", "model_name", "mae", "rmse", "r2", "precision_pct"]].copy()
+    best_display["precision_pct"] = best_display["precision_pct"].map(format_percent)
     st.dataframe(best_display, width="stretch", hide_index=True)
     if {5, 7}.issubset(set(pivot.columns)):
         st.caption("Comparación por modelo: MAE menor indica mejor rendimiento.")
@@ -411,12 +422,11 @@ with tab_performance:
         predictions = load_predictions(pred_path)
         metrics = load_metrics(selected_model, selected_horizon)
 
-        metric_cols = st.columns(3)
+        metric_cols = st.columns(4)
         metric_cols[0].metric("MAE", f"{metrics.get('mae', float('nan')):.4f}" if metrics.get("mae") is not None else "NA")
         metric_cols[1].metric("RMSE", f"{metrics.get('rmse', float('nan')):.4f}" if metrics.get("rmse") is not None else "NA")
         metric_cols[2].metric("R2", f"{metrics.get('r2', float('nan')):.4f}" if metrics.get("r2") is not None else "NA")
-        if selected_model in MODEL_EXPLANATIONS:
-            st.caption(MODEL_EXPLANATIONS[selected_model])
+        metric_cols[3].metric("Precisión", format_percent(metrics.get("precision_pct")))
 
         plot_path = PLOTS_DIR / f"{selected_model}_h{selected_horizon}_real_vs_pred.png"
         if plot_path.exists():
@@ -432,8 +442,13 @@ with tab_performance:
         best_model_summary(comparison)
         if not comparison.empty and "horizon_days" in comparison.columns:
             st.subheader("Comparación global")
+            comparison_display = comparison[comparison["horizon_days"] == selected_horizon].sort_values(
+                "mae", na_position="last"
+            ).copy()
+            if "precision_pct" in comparison_display.columns:
+                comparison_display["precision_pct"] = comparison_display["precision_pct"].map(format_percent)
             st.dataframe(
-                comparison[comparison["horizon_days"] == selected_horizon].sort_values("mae", na_position="last"),
+                comparison_display,
                 width="stretch",
                 hide_index=True,
             )

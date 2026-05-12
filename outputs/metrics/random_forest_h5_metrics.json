@@ -2,9 +2,9 @@
   "model_name": "random_forest",
   "status": "ok",
   "notes": "",
-  "mae": 0.05175548365905478,
-  "rmse": 0.07490491360965999,
-  "r2": 0.8577119297081474,
+  "mae": 0.05165398261783997,
+  "rmse": 0.0747915598552359,
+  "r2": 0.8581422534949952,
   "n_train": 19722,
   "n_val": 4218,
   "n_test": 4332,
@@ -59,6 +59,6 @@
   ],
   "target": "target_stress_5d",
   "horizon_days": 5,
-  "predictions_file": "C:\\Users\\agortiz\\OneDrive - Indra\\Escritorio\\SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO\\outputs\\predictions\\random_forest_h5_predictions.csv",
-  "plot_file": "C:\\Users\\agortiz\\OneDrive - Indra\\Escritorio\\SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO\\outputs\\plots\\random_forest_h5_real_vs_pred.png"
+  "predictions_file": "/Users/alvaro/Proyectos/SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO/outputs/predictions/random_forest_h5_predictions.csv",
+  "plot_file": "/Users/alvaro/Proyectos/SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO/outputs/plots/random_forest_h5_real_vs_pred.png"
 }

@@ -2,9 +2,9 @@
   "model_name": "convlstm",
   "status": "ok",
   "notes": "Simplified ConvLSTM: feature vectors are reshaped into pseudo-spatial grids because the current dataset has no image tensors.",
-  "mae": 0.09517518664398819,
-  "rmse": 0.12485694017872931,
-  "r2": 0.6046577315823318,
+  "mae": 0.09517507183590727,
+  "rmse": 0.12485680511071151,
+  "r2": 0.604658586930342,
   "n_train": 18924,
   "n_val": 4218,
   "n_test": 4332,
@@ -59,6 +59,6 @@
   ],
   "target": "target_stress_5d",
   "horizon_days": 5,
-  "predictions_file": "C:\\Users\\agortiz\\OneDrive - Indra\\Escritorio\\SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO\\outputs\\predictions\\convlstm_h5_predictions.csv",
-  "plot_file": "C:\\Users\\agortiz\\OneDrive - Indra\\Escritorio\\SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO\\outputs\\plots\\convlstm_h5_real_vs_pred.png"
+  "predictions_file": "/Users/alvaro/Proyectos/SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO/outputs/predictions/convlstm_h5_predictions.csv",
+  "plot_file": "/Users/alvaro/Proyectos/SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO/outputs/plots/convlstm_h5_real_vs_pred.png"
 }

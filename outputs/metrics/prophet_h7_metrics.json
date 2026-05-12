@@ -2,9 +2,9 @@
   "model_name": "prophet",
   "status": "ok",
   "notes": "Prophet fitted on weekly aggregate mean target_stress_7d, not parcel-level series.",
-  "mae": 0.1553443186258146,
-  "rmse": 0.18383067886690793,
-  "r2": -0.5652349828068619,
+  "mae": 0.15528830235644267,
+  "rmse": 0.18377799821181293,
+  "r2": -0.5643380075057256,
   "n_train": 163,
   "n_val": 31,
   "n_test": 31,
@@ -13,6 +13,6 @@
   ],
   "target": "target_stress_7d",
   "horizon_days": 7,
-  "predictions_file": "C:\\Users\\agortiz\\OneDrive - Indra\\Escritorio\\SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO\\outputs\\predictions\\prophet_h7_predictions.csv",
-  "plot_file": "C:\\Users\\agortiz\\OneDrive - Indra\\Escritorio\\SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO\\outputs\\plots\\prophet_h7_real_vs_pred.png"
+  "predictions_file": "/Users/alvaro/Proyectos/SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO/outputs/predictions/prophet_h7_predictions.csv",
+  "plot_file": "/Users/alvaro/Proyectos/SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO/outputs/plots/prophet_h7_real_vs_pred.png"
 }

@@ -2,9 +2,9 @@
   "model_name": "lstm",
   "status": "ok",
   "notes": "PyTorch sequence model using 8 previous observations per parcel.",
-  "mae": 0.06864801739384657,
-  "rmse": 0.09091034390031716,
-  "r2": 0.7914182192526724,
+  "mae": 0.06864803110106578,
+  "rmse": 0.09091035766967534,
+  "r2": 0.791418156068719,
   "n_train": 20748,
   "n_val": 4560,
   "n_test": 4674,
@@ -59,6 +59,6 @@
   ],
   "target": "target_stress_7d",
   "horizon_days": 7,
-  "predictions_file": "C:\\Users\\agortiz\\OneDrive - Indra\\Escritorio\\SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO\\outputs\\predictions\\lstm_h7_predictions.csv",
-  "plot_file": "C:\\Users\\agortiz\\OneDrive - Indra\\Escritorio\\SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO\\outputs\\plots\\lstm_h7_real_vs_pred.png"
+  "predictions_file": "/Users/alvaro/Proyectos/SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO/outputs/predictions/lstm_h7_predictions.csv",
+  "plot_file": "/Users/alvaro/Proyectos/SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO/outputs/plots/lstm_h7_real_vs_pred.png"
 }

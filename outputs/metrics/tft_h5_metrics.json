@@ -2,9 +2,9 @@
   "model_name": "tft",
   "status": "ok",
   "notes": "Lightweight TFT-inspired PyTorch model with feature gating and temporal self-attention; it avoids the heavy pytorch-forecasting dependency.",
-  "mae": 0.07925521198992284,
-  "rmse": 0.10846200861130725,
-  "r2": 0.7016657188544138,
+  "mae": 0.07819974835358508,
+  "rmse": 0.10631102411222146,
+  "r2": 0.7133813288245668,
   "n_train": 18924,
   "n_val": 4218,
   "n_test": 4332,
@@ -59,6 +59,6 @@
   ],
   "target": "target_stress_5d",
   "horizon_days": 5,
-  "predictions_file": "C:\\Users\\agortiz\\OneDrive - Indra\\Escritorio\\SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO\\outputs\\predictions\\tft_h5_predictions.csv",
-  "plot_file": "C:\\Users\\agortiz\\OneDrive - Indra\\Escritorio\\SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO\\outputs\\plots\\tft_h5_real_vs_pred.png"
+  "predictions_file": "/Users/alvaro/Proyectos/SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO/outputs/predictions/tft_h5_predictions.csv",
+  "plot_file": "/Users/alvaro/Proyectos/SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO/outputs/plots/tft_h5_real_vs_pred.png"
 }

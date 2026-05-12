@@ -44,7 +44,70 @@ En la documentación se utilizan las siguientes siglas:
 | MSI (Moisture Stress Index) | Índice asociado a estrés hídrico. |
 | ET0 (evapotranspiración de referencia) | Variable climática usada como referencia de demanda evaporativa. |
 
-## 2. Modelos evaluados
+## 2. Preparación del dataset de entrenamiento
+
+Antes de entrenar los modelos se ha transformado el CSV bruto de Sentinel en un dataset supervisado preparado para aprendizaje automático. El objetivo de esta preparación ha sido convertir cada observación histórica de una parcela en una fila de entrenamiento con variables explicativas, una etiqueta futura y una partición temporal de entrenamiento, validación o test.
+
+El proceso se ejecuta con:
+
+```bash
+python scripts/prepare_dataset.py --horizon-days 5
+python scripts/prepare_dataset.py --horizon-days 7
+```
+
+Cada ejecución genera un fichero procesado específico para el horizonte temporal elegido:
+
+- `data/processed/dataset_modeling_h5.csv` para predicción a 5 días.
+- `data/processed/dataset_modeling_h7.csv` para predicción a 7 días.
+- `data/processed/dataset_modeling.csv` como alias de compatibilidad del horizonte por defecto de 7 días.
+
+El primer paso consiste en leer el CSV bruto `data/raw/sentinel_stress_by_parcel_20160101_to_20260510.csv`. Se convierte la columna `fecha` a formato fecha, se eliminan las filas sin fecha válida y se ordenan las observaciones por `nombre_parcela` y `fecha`. Si una parcela no tiene nombre, se usa su `parcela_id` como identificador alternativo para no perder la fila.
+
+Después se normalizan los tipos de datos. Todas las columnas que no son `nombre_parcela` ni `fecha` se convierten a valores numéricos siempre que sea posible. Esto deja preparadas las bandas Sentinel, variables auxiliares e identificadores numéricos para que los modelos puedan usarlos sin errores de tipo.
+
+A partir de las bandas espectrales se calculan tres índices derivados:
+
+- `ndvi` (Normalized Difference Vegetation Index): `(B8A - B4) / (B8A + B4)`.
+- `ndmi` (Normalized Difference Moisture Index): `(B8A - B12) / (B8A + B12)`.
+- `msi` (Moisture Stress Index): `B12 / B8A`.
+
+Estos índices resumen información relevante sobre vigor vegetal, humedad y estrés hídrico. Las divisiones se hacen de forma segura para evitar infinitos cuando el denominador es cero.
+
+También se crean variables temporales a partir de la fecha:
+
+- `year`, `month`, `dayofyear` y `weekofyear`.
+- `month_sin` y `month_cos` para representar el ciclo anual del mes.
+- `doy_sin` y `doy_cos` para representar el ciclo anual del día del año.
+
+Estas variables permiten que los modelos capten patrones estacionales sin tratar el calendario como una simple escala lineal.
+
+Para incorporar memoria histórica se calculan variables por parcela. Dentro de cada `nombre_parcela`, ordenando por fecha, se generan lags, diferencias y medias móviles para `stress_index`, `ndvi`, `ndmi` y `msi`:
+
+- `lag_1` y `lag_2`: valores de las dos observaciones anteriores.
+- `diff_1`: cambio respecto a la observación anterior.
+- `roll_mean_3`: media móvil de las tres observaciones previas, sin usar la observación actual.
+- `days_since_previous_observation`: días desde la observación anterior de la misma parcela.
+- `parcela_code`: codificación numérica de la parcela.
+
+La variable objetivo se construye mirando hacia el futuro dentro de cada parcela. Para cada fila se busca la observación futura más cercana a `fecha + horizonte`, donde el horizonte puede ser 5 o 7 días. Si existe una observación futura dentro de la tolerancia configurada, se guarda su `stress_index` como `target_stress_5d` o `target_stress_7d`. También se guarda la fecha real usada como objetivo en `target_date` y la distancia temporal en `target_delta_days`.
+
+Las filas que no tienen una observación futura válida se eliminan del entrenamiento. Esto evita entrenar modelos con etiquetas incompletas y garantiza que todas las filas usadas tengan un valor objetivo real.
+
+Después se limpian los valores faltantes de las variables numéricas. Primero se sustituyen infinitos por nulos. Luego, dentro de cada parcela, se aplican rellenos hacia delante y hacia atrás para aprovechar la continuidad temporal. Los nulos restantes se completan con la mediana de cada variable numérica.
+
+Finalmente se añade una división temporal común para todos los modelos:
+
+| Partición | Porcentaje aproximado | Uso |
+|---|---:|---|
+| `train` | 70 % | Entrenar el modelo y ajustar sus parámetros internos. |
+| `val` | 15 % | Validar el rendimiento durante el desarrollo y comparar configuraciones. |
+| `test` | 15 % | Evaluar el resultado final con fechas recientes no usadas para entrenar. |
+
+Esta división es temporal y no aleatoria. Es importante porque simula mejor el caso real: entrenar con datos pasados y evaluar con datos posteriores. Así se evita que información del futuro se mezcle en el entrenamiento.
+
+El resultado final es un dataset tabular por parcela y fecha, con variables espectrales, temporales e históricas, una etiqueta futura por horizonte y una columna `split` que permite evaluar todos los modelos bajo las mismas condiciones.
+
+## 3. Modelos evaluados
 
 Se han probado modelos de distintas familias para comparar enfoques simples, modelos temporales y modelos estadísticos.
 
@@ -114,7 +177,7 @@ SARIMAX (Seasonal AutoRegressive Integrated Moving Average with eXogenous regres
 
 Al igual que Prophet, sirve como referencia interpretable, pero no compite bien con los modelos que trabajan directamente por parcela.
 
-## 3. Cómo se han comparado los modelos
+## 4. Cómo se han comparado los modelos
 
 Todos los modelos se han evaluado con métricas de regresión:
 
@@ -132,7 +195,7 @@ La división de datos se ha hecho de forma temporal:
 
 Esto es importante porque evita evaluar el modelo con información mezclada del futuro.
 
-## 4. Resultados principales
+## 5. Resultados principales
 
 En las pruebas realizadas, los mejores modelos han sido:
 
@@ -152,7 +215,7 @@ Los modelos secuenciales y avanzados funcionan, pero en general quedan por detr�
 
 Los modelos agregados, como Prophet y SARIMAX (Seasonal AutoRegressive Integrated Moving Average with eXogenous regressors), son los que peor rendimiento ofrecen en esta comparación.
 
-## 5. Conclusiones de las pruebas
+## 6. Conclusiones de las pruebas
 
 La primera conclusión es que los modelos tabulares funcionan mejor para este MVP (Minimum Viable Product / Producto Mínimo Viable). Random Forest y XGBoost (Extreme Gradient Boosting) aprovechan muy bien la información histórica y las variables ya preparadas.
 
@@ -164,7 +227,7 @@ La cuarta conclusión es que los modelos agregados pierden demasiada informació
 
 La quinta conclusión es que el modelo recomendado para la demo y para la primera versión del sistema es Random Forest. Es el más preciso, estable y fácil de explicar. XGBoost (Extreme Gradient Boosting) queda como alternativa fuerte.
 
-## 6. Modelo recomendado
+## 7. Modelo recomendado
 
 Para el MVP (Minimum Viable Product / Producto Mínimo Viable) se recomienda usar:
 
@@ -193,7 +256,7 @@ Motivos:
 - es un baseline tabular muy competitivo;
 - podría mejorar con ajuste de hiperparámetros.
 
-## 7. Líneas futuras
+## 8. Líneas futuras
 
 Las mejoras más relevantes serían:
 
@@ -204,7 +267,7 @@ Las mejoras más relevantes serían:
 - evaluar si ConvLSTM (Convolutional Long Short-Term Memory) o CNN-LSTM (Convolutional Neural Network + Long Short-Term Memory) mejoran cuando existan imágenes o tensores espaciales reales;
 - comparar Chronos-Bolt real cargando pesos del modelo fundacional.
 
-## 8. Resumen final
+## 9. Resumen final
 
 El sistema ha conseguido entrenar y comparar múltiples modelos bajo una misma estructura. Las pruebas muestran que, para el dataset actual, la mejor solución no es la más compleja, sino la más robusta.
 

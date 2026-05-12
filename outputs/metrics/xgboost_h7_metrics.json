@@ -2,9 +2,9 @@
   "model_name": "xgboost",
   "status": "ok",
   "notes": "",
-  "mae": 0.06144907988665544,
-  "rmse": 0.08409220165923353,
-  "r2": 0.8215316469777475,
+  "mae": 0.06222677834393272,
+  "rmse": 0.08517277473951583,
+  "r2": 0.8169155915117337,
   "n_train": 21546,
   "n_val": 4560,
   "n_test": 4674,
@@ -59,6 +59,6 @@
   ],
   "target": "target_stress_7d",
   "horizon_days": 7,
-  "predictions_file": "C:\\Users\\agortiz\\OneDrive - Indra\\Escritorio\\SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO\\outputs\\predictions\\xgboost_h7_predictions.csv",
-  "plot_file": "C:\\Users\\agortiz\\OneDrive - Indra\\Escritorio\\SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO\\outputs\\plots\\xgboost_h7_real_vs_pred.png"
+  "predictions_file": "/Users/alvaro/Proyectos/SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO/outputs/predictions/xgboost_h7_predictions.csv",
+  "plot_file": "/Users/alvaro/Proyectos/SISTEMA_DETECCION_TEMPR_ESTRES_HIDRICO/outputs/plots/xgboost_h7_real_vs_pred.png"
 }
